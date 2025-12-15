@@ -25,12 +25,11 @@ class TextNode:
             and self.url == other.url
         )
 
-    def __repr__(self) -> str:
-        # TextNode(TEXT, TEXT_TYPE, URL)
+    def __repr__(self):
         if self.url:
             return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
-        else:
-            return f"TextNode({self.text}, {self.text_type.value})"
+        return f"TextNode({self.text}, {self.text_type.value})"
+
 
 def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -48,40 +47,59 @@ def text_node_to_html_node(text_node):
     raise ValueError(f"invalid text type: {text_node.text_type}")
 
 def split_nodes_image(old_nodes):
-    from split_nodes import split_nodes_delimiter
     new_nodes = []
     for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+            continue
+
         images = extract_markdown_images(node.text)
-        original_text = node.text
+        if not images:
+            new_nodes.append(node)
+            continue
+
+        remaining_text = node.text
         for alt_text, url in images:
-            sections = original_text.split(f"![{alt_text}]({url})", 1)
-            if not url:
-                continue
-            delimiter = f"![{alt_text}]({url})"
-            if sections[0]:
-                new_nodes.append(TextNode(sections[0], TextType.TEXT))
+            before, _, after = remaining_text.partition(f"![{alt_text}]({url})")
+            if before:
+                new_nodes.append(TextNode(before, TextType.TEXT))
             new_nodes.append(TextNode(alt_text, TextType.IMAGE, url))
-            original_text = sections[1]
-        if original_text:
-            new_nodes.append(TextNode(original_text, TextType.TEXT))
+            remaining_text = after
+        if remaining_text:
+            new_nodes.append(TextNode(remaining_text, TextType.TEXT))
     return new_nodes
     
 
 def split_nodes_link(old_nodes):
-    from split_nodes import split_nodes_delimiter
     new_nodes = []
     for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+            continue
+
         links = extract_markdown_links(node.text)
-        original_text = node.text
+        if not links:
+            new_nodes.append(node)
+            continue
+
+        remaining_text = node.text
         for link_text, url in links:
-            sections = original_text.split(f"[{link_text}]({url})", 1)
-            if not url:
-                continue
-            delimiter = f"[{link_text}]({url})"
-            if sections[0]:
-                new_nodes.append(TextNode(sections[0], TextType.TEXT))
+            before, _, after = remaining_text.partition(f"[{link_text}]({url})")
+            if before:
+                new_nodes.append(TextNode(before, TextType.TEXT))
             new_nodes.append(TextNode(link_text, TextType.LINK, url))
-            original_text = sections[1]
-        if original_text:
-            new_nodes.append(TextNode(original_text, TextType.TEXT))
+            remaining_text = after
+        if remaining_text:
+            new_nodes.append(TextNode(remaining_text, TextType.TEXT))
     return new_nodes
+
+def text_to_textnodes(text):
+    from split_nodes import split_nodes_delimiter
+
+    nodes = [TextNode(text, TextType.TEXT)]
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes
