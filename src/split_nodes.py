@@ -1,5 +1,4 @@
-from htmlnode import LeafNode, ParentNode, HTMLNode
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     nodes = old_nodes if isinstance(old_nodes, list) else [old_nodes]

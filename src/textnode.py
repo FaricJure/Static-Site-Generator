@@ -1,5 +1,6 @@
 from enum import Enum
 from htmlnode import LeafNode, ParentNode, HTMLNode
+from extract_markdown import extract_markdown_images, extract_markdown_links
 
 class TextType(Enum):
     TEXT = "text"
@@ -45,3 +46,42 @@ def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.IMAGE:
         return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})
     raise ValueError(f"invalid text type: {text_node.text_type}")
+
+def split_nodes_image(old_nodes):
+    from split_nodes import split_nodes_delimiter
+    new_nodes = []
+    for node in old_nodes:
+        images = extract_markdown_images(node.text)
+        original_text = node.text
+        for alt_text, url in images:
+            sections = original_text.split(f"![{alt_text}]({url})", 1)
+            if not url:
+                continue
+            delimiter = f"![{alt_text}]({url})"
+            if sections[0]:
+                new_nodes.append(TextNode(sections[0], TextType.TEXT))
+            new_nodes.append(TextNode(alt_text, TextType.IMAGE, url))
+            original_text = sections[1]
+        if original_text:
+            new_nodes.append(TextNode(original_text, TextType.TEXT))
+    return new_nodes
+    
+
+def split_nodes_link(old_nodes):
+    from split_nodes import split_nodes_delimiter
+    new_nodes = []
+    for node in old_nodes:
+        links = extract_markdown_links(node.text)
+        original_text = node.text
+        for link_text, url in links:
+            sections = original_text.split(f"[{link_text}]({url})", 1)
+            if not url:
+                continue
+            delimiter = f"[{link_text}]({url})"
+            if sections[0]:
+                new_nodes.append(TextNode(sections[0], TextType.TEXT))
+            new_nodes.append(TextNode(link_text, TextType.LINK, url))
+            original_text = sections[1]
+        if original_text:
+            new_nodes.append(TextNode(original_text, TextType.TEXT))
+    return new_nodes
