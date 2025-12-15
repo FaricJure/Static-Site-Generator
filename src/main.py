@@ -1,5 +1,6 @@
 from textnode import TextNode, TextType, split_nodes_image, split_nodes_link, text_to_textnodes
 from htmlnode import LeafNode, ParentNode
+from extract_markdown import markdown_to_blocks
 #from split_nodes import split_nodes_delimiter
 
 def main():
@@ -28,8 +29,22 @@ def main():
     for nn in new_nodes:
         print(nn)
     """
+    """
     text_to_textnodes(node.text)
     print(text_to_textnodes(node.text))
+    """
+    md = """
+This is **bolded** paragraph
 
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+    blocks = markdown_to_blocks(md)
+    print(blocks)
+
+        
 if __name__ == "__main__":
     main()
