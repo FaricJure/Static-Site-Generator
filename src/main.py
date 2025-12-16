@@ -1,50 +1,33 @@
-from textnode import TextNode, TextType, split_nodes_image, split_nodes_link, text_to_textnodes
-from htmlnode import LeafNode, ParentNode
-from extract_markdown import markdown_to_blocks
-#from split_nodes import split_nodes_delimiter
+import os
+import shutil
+
+
+def _remove_recursive(path: str) -> None:
+    """Recursively delete files/directories at path (similar to shutil.rmtree)."""
+    if os.path.isdir(path) and not os.path.islink(path):
+        for entry in os.scandir(path):
+            _remove_recursive(entry.path)
+        os.rmdir(path)
+    else:
+        os.remove(path)
+
+
+def clear_directory(dst: str = "public", src: str = "static") -> None:
+    if os.path.exists(dst):
+        print(f"Clearing directory: {dst}")
+        _remove_recursive(dst)
+    else:
+        print(f"Directory does not exist: {dst}")
+
+    print(f"Creating directory: {dst}")
+    os.makedirs(dst, exist_ok=True)
+    print(f"Copying static files to: {dst}")
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+
 
 def main():
-    # node = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
-    node = TextNode("This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)", TextType.TEXT)
-    html_node = LeafNode("a", node.text, {"href": node.url})
-    parent_node = ParentNode(
-    "p",
-    [
-        LeafNode("b", "Bold text"),
-        LeafNode(None, "Normal text"),
-        LeafNode("i", "italic text"),
-        LeafNode(None, "Normal text"),
-    ],
-)
-    """
-    node_to_split = TextNode("This is text with a `code block` word", TextType.TEXT)
-    split_nodes = split_nodes_delimiter(node_to_split, "`", TextType.CODE)
-    print("Split Nodes:")
-    for sn in split_nodes:
-        print(sn)
-    #print(parent_node.to_html())
-    """
-    """
-    new_nodes = split_nodes_link([node])
-    for nn in new_nodes:
-        print(nn)
-    """
-    """
-    text_to_textnodes(node.text)
-    print(text_to_textnodes(node.text))
-    """
-    md = """
-This is **bolded** paragraph
+    clear_directory()
 
-This is another paragraph with _italic_ text and `code` here
-This is the same paragraph on a new line
 
-- This is a list
-- with items
-"""
-    blocks = markdown_to_blocks(md)
-    print(blocks)
-
-        
 if __name__ == "__main__":
     main()
