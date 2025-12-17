@@ -24,3 +24,7 @@ def extract_title(markdown):
     if not titles:
         raise ValueError("No titles found in the markdown content.")
     return titles
+
+# Backwards-compat alias for tests expecting extract_titles
+def extract_titles(markdown):
+    return extract_title(markdown)

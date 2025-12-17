@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 
@@ -41,9 +42,23 @@ def generate_page(from_path, template_path, dest_path, basepath):
 
     page_title = extract_title(from_path_content)[0]
     final_page = template_content.replace("{{ Content }}", final_content).replace("{{ Title }}", page_title)
+    
+    def apply_basepath(html: str, base: str) -> str:
+        prefix = "" if base in ("", "/") else base.rstrip("/")
 
-    final_page = final_page.replace("href=\"/\"", f'href="{basepath}"')
-    final_page = final_page.replace("src=\"/\"", f'src="{basepath}"')
+        def repl_href(match):
+            path = match.group(1)
+            return f'href="{prefix + "/" + path if prefix else path}"'
+
+        def repl_src(match):
+            path = match.group(1)
+            return f'src="{prefix + "/" + path if prefix else path}"'
+
+        html = re.sub(r'href="/([^"]*)"', repl_href, html)
+        html = re.sub(r'src="/([^"]*)"', repl_src, html)
+        return html
+
+    final_page = apply_basepath(final_page, basepath)
 
     with open(dest_path, "w", encoding="utf-8") as f:
         f.write(final_page)
