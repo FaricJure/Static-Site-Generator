@@ -28,11 +28,18 @@ def clear_directory(dst: str = "public", src: str = "static") -> None:
     print(f"Copying static files to: {dst}")
     shutil.copytree(src, dst, dirs_exist_ok=True)
     print("Writing the new full HTML page to the destination directory.")
+    generate_pages_recursive(
+        dir_path_content="content",
+        template_path="template.html",
+        dest_dir_path="public",
+    )
+    """
     generate_page(
         from_path="content/index.md",
         template_path="template.html",
         dest_path="public/index.html",
     )
+    """
 
 def generate_page(from_path, template_path, dest_path):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
@@ -49,6 +56,18 @@ def generate_page(from_path, template_path, dest_path):
 
     with open(dest_path, "w", encoding="utf-8") as f:
         f.write(final_page)
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    for entry in os.scandir(dir_path_content):
+        if entry.is_file() and entry.name.endswith(".md"):
+            relative_path = os.path.relpath(entry.path, dir_path_content)
+            dest_path = os.path.join(dest_dir_path, relative_path[:-3] + ".html")
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            generate_page(entry.path, template_path, dest_path)
+        elif entry.is_dir():
+            new_dest_dir = os.path.join(dest_dir_path, entry.name)
+            os.makedirs(new_dest_dir, exist_ok=True)
+            generate_pages_recursive(entry.path, template_path, new_dest_dir)
 
 def main():
     clear_directory()
