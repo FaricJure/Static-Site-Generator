@@ -17,3 +17,10 @@ def markdown_to_blocks(markdown):
         filtered_blocks.append(text.strip())
 
     return filtered_blocks
+
+def extract_title(markdown):
+    title_pattern = r"^#+\s*(.*)$"
+    titles = re.findall(title_pattern, markdown, re.MULTILINE)
+    if not titles:
+        raise ValueError("No titles found in the markdown content.")
+    return titles

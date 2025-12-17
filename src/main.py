@@ -1,6 +1,10 @@
 import os
 import shutil
 
+from extract_markdown import extract_title
+from markdown_to_html import markdown_to_html_node
+
+
 
 def _remove_recursive(path: str) -> None:
     """Recursively delete files/directories at path (similar to shutil.rmtree)."""
@@ -23,7 +27,28 @@ def clear_directory(dst: str = "public", src: str = "static") -> None:
     os.makedirs(dst, exist_ok=True)
     print(f"Copying static files to: {dst}")
     shutil.copytree(src, dst, dirs_exist_ok=True)
+    print("Writing the new full HTML page to the destination directory.")
+    generate_page(
+        from_path="content/index.md",
+        template_path="template.html",
+        dest_path="public/index.html",
+    )
 
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    with open(from_path, "r", encoding="utf-8") as f:
+        from_path_content = f.read()
+    with open(template_path, "r", encoding="utf-8") as f:
+        template_content = f.read()
+
+    html_content = markdown_to_html_node(from_path_content)
+    final_content = html_content.to_html()
+
+    page_title = extract_title(from_path_content)[0]
+    final_page = template_content.replace("{{ Content }}", final_content).replace("{{ Title }}", page_title)
+
+    with open(dest_path, "w", encoding="utf-8") as f:
+        f.write(final_page)
 
 def main():
     clear_directory()
