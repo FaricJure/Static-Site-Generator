@@ -44,15 +44,18 @@ def generate_page(from_path, template_path, dest_path, basepath):
     final_page = template_content.replace("{{ Content }}", final_content).replace("{{ Title }}", page_title)
     
     def apply_basepath(html: str, base: str) -> str:
-        prefix = "" if base in ("", "/") else base.rstrip("/")
+        if base in ("", "/"):
+            prefix = ""
+        else:
+            prefix = "/" + base.strip("/")
 
         def repl_href(match):
             path = match.group(1)
-            return f'href="{prefix + "/" + path if prefix else path}"'
+            return f'href="{prefix + "/" + path if prefix else "/" + path}"'
 
         def repl_src(match):
             path = match.group(1)
-            return f'src="{prefix + "/" + path if prefix else path}"'
+            return f'src="{prefix + "/" + path if prefix else "/" + path}"'
 
         html = re.sub(r'href="/([^"]*)"', repl_href, html)
         html = re.sub(r'src="/([^"]*)"', repl_src, html)
